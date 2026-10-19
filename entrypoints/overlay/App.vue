@@ -17,6 +17,9 @@ const { locale, t } = useI18n()
 
 const uiLocale = computed(() => (locale.value === 'zh' ? zhLocale : enLocale))
 
+/** 品牌区跳转官网：中文走 /zh，英文走默认根路径 */
+const siteUrl = computed(() => (locale.value === 'zh' ? 'https://tcp.lc/zh' : 'https://tcp.lc'))
+
 const params = new URLSearchParams(window.location.search)
 const restricted = params.get('error') === 'restricted'
 const rawUrl = params.get('url') ?? ''
@@ -116,10 +119,9 @@ const gradeKeys: Record<AuditGrade, MessageKey> = {
   F: 'audit.grade.F',
 }
 
-const auditLine = computed(() => {
+const auditLetter = computed(() => {
   if (auditLoading.value) return '…'
-  if (!audit.value) return '—'
-  return `${audit.value.grade} · ${audit.value.score}/100`
+  return audit.value?.grade ?? '—'
 })
 
 const auditLabel = computed(() => {
@@ -150,7 +152,7 @@ const auditTip = computed(() => {
   const parts = [t('audit.basis')]
   if (audit.value.capReason === 'invalid-cert') parts.push(t('audit.cap.invalidCert'))
   if (audit.value.partial) parts.push(t('audit.partial'))
-  return parts.join(' · ')
+  return parts.join(' ')
 })
 
 const showIcp = computed(() => locale.value === 'zh' && isSupportedDomain.value)
@@ -262,7 +264,13 @@ function openSettings() {
     <div class="min-h-screen">
       <header class="sticky top-0 z-10 border-b border-default bg-default px-3 py-2.5">
         <div class="flex items-center justify-between gap-3">
-          <div class="flex min-w-0 items-center gap-2.5">
+          <a
+            :href="siteUrl"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="flex min-w-0 items-center gap-2.5 rounded-md transition hover:opacity-80"
+            :aria-label="t('overlay.website')"
+          >
             <img
               src="/icon/128.png"
               alt="TCPLab"
@@ -276,7 +284,7 @@ function openSettings() {
                 {{ t('app.subtitle') }}
               </p>
             </div>
-          </div>
+          </a>
 
           <div class="flex shrink-0 items-center gap-0.5">
             <UButton
@@ -315,10 +323,6 @@ function openSettings() {
           :ui="{ body: 'p-3 sm:p-3' }"
         >
           <div class="flex items-start gap-3">
-            <div class="flex size-9 shrink-0 items-center justify-center rounded-lg bg-elevated">
-              <UIcon name="i-lucide-globe" class="size-5 text-muted" />
-            </div>
-
             <div class="min-w-0 flex-1">
               <h2 class="truncate text-base font-semibold text-highlighted">
                 {{ page.title }}
@@ -335,15 +339,15 @@ function openSettings() {
                 <template v-if="showIcp">
                   <div
                     v-if="icpFiled"
-                    class="w-full min-w-0 rounded-md border border-success/30 bg-success/5 px-2 py-1"
+                    class="flex w-full min-w-0 flex-col items-start gap-1"
                     :title="icpTitle"
                   >
-                    <p class="truncate text-[11px] font-medium leading-tight text-success">
-                      {{ icpLicenceLine }}
-                    </p>
+                    <UBadge color="success" variant="subtle" size="sm" class="max-w-full">
+                      <span class="truncate">{{ icpLicenceLine }}</span>
+                    </UBadge>
                     <p
                       v-if="icpSubject"
-                      class="mt-0.5 truncate text-[10px] leading-tight text-muted"
+                      class="max-w-full truncate text-[10px] leading-tight text-muted"
                     >
                       {{ icpSubject }}
                     </p>
@@ -368,11 +372,15 @@ function openSettings() {
             >
               <div
                 tabindex="0"
-                class="flex size-[72px] shrink-0 cursor-help flex-col items-center justify-center rounded-xl border border-default bg-elevated px-1.5 py-1.5"
+                class="flex size-[72px] shrink-0 cursor-help flex-col items-center justify-center self-center rounded-xl border border-default bg-elevated px-1.5 py-1.5"
                 :class="auditTone"
               >
-                <span class="text-[11px] font-semibold leading-none">{{ auditLine }}</span>
-                <span class="mt-1 text-center text-[10px] leading-tight">{{ auditLabel }}</span>
+                <span class="text-lg font-bold leading-none">{{ auditLetter }}</span>
+                <span v-if="audit" class="mt-0.5 inline-flex items-baseline gap-0.5 leading-none tabular-nums">
+                  <span class="text-[11px] font-semibold">{{ audit.score }}</span>
+                  <span class="text-[10px] font-normal text-muted">/100</span>
+                </span>
+                <span class="mt-0.5 text-center text-[11px] font-medium leading-tight">{{ auditLabel }}</span>
               </div>
             </UTooltip>
           </div>
@@ -443,17 +451,6 @@ function openSettings() {
             />
           </UCard>
         </div>
-
-        <p class="mt-3 text-center text-[11px] text-dimmed">
-          <a
-            href="https://tcp.lc"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="transition hover:text-primary"
-          >
-            {{ t('popup.dataSource') }}
-          </a>
-        </p>
       </main>
     </div>
   </UApp>
