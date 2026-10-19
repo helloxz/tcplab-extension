@@ -13,6 +13,8 @@ export const CACHE_TTL_MS = {
   whois: 24 * 60 * 60 * 1000,
   /** IP 归属地变动很小，放宽到 7 天以减少额外请求 */
   ipGeo: 7 * 24 * 60 * 60 * 1000,
+  /** ICP 备案结果变动不频繁；后端已有缓存，本地再缓存 24 小时降低配额消耗 */
+  icp: 24 * 60 * 60 * 1000,
 } as const
 
 export type CacheKind = keyof typeof CACHE_TTL_MS

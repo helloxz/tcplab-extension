@@ -59,7 +59,7 @@ onMounted(() => {
   void load()
 })
 
-defineExpose({ refresh })
+defineExpose({ refresh, data, status })
 </script>
 
 <template>

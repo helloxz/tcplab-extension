@@ -173,3 +173,31 @@ export interface WhoisResult {
     cached?: boolean
   }
 }
+
+/** 一条 ICP 备案记录（后端已把两个上游字段归一） */
+export interface IcpRecord {
+  domain: string
+  /** 主体备案号 */
+  mainLicence: string
+  /** 网站备案号 */
+  serviceLicence: string
+  unitName: string
+  /** 单位性质，如 企业 / 个人 */
+  natureName: string
+  contentType: string
+  limitAccess: string
+  siteName: string | null
+  updatedAt: string
+}
+
+export type IcpSource = 'primary' | 'fallback'
+
+export interface IcpQueryResult {
+  domain: string
+  suffix: string
+  filed: boolean
+  records: IcpRecord[]
+  source: IcpSource
+  fetchedAt: string
+  cached: boolean
+}
