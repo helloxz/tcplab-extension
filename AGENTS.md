@@ -2,21 +2,22 @@
 
 ## 项目
 
-点击扩展图标打开 popup，自动读取当前**公开 http/https 页面**的标题、DNS、WHOIS、SSL 信息（调用 TCPLab API）。
+点击扩展图标，在当前页面右侧注入一个 **460px 悬浮 iframe**，自动读取当前**公开 http/https 页面**的标题、DNS、WHOIS、SSL 信息（调用 TCPLab API）。
 
-内网、本地、空白、浏览器内部页面不读取，并给出提示。
+悬浮层覆盖页面但不改变页面宽度；每个 tab 独立，新 tab 不自动打开。内网、本地、空白、浏览器内部页面不读取，并给出提示。
 
 ## 技术栈
 
 - WXT + Vue 3 + Nuxt UI v4 + Tailwind CSS 4 + TypeScript
 - 包管理：**只用 pnpm**，禁止 npm / npx
-- 目标：Chrome MV3 优先；代码保持跨浏览器，Firefox 后续补构建和测试
+- 目标：Chrome + Firefox 统一 **MV3**；通过 `scripting.executeScript` 注入悬浮 iframe，不使用 side_panel / sidebar_action；Firefox 由用户自测
 
 ## 命令
 
 ```bash
 pnpm dev
 pnpm build
+pnpm build:firefox
 pnpm typecheck   # 先 pnpm build，确保 Nuxt UI dts 已生成
 pnpm test
 pnpm zip
@@ -25,19 +26,28 @@ pnpm zip
 ## 目录
 
 ```text
-entrypoints/popup       # 主界面，读取 active tab
+entrypoints/overlay     # 悬浮层页面，单页展示 DNS / SSL / WHOIS
 entrypoints/options     # 语言设置
-entrypoints/background  # 预留 API 代理/缓存
+entrypoints/background  # action click → 注入/移除 iframe；受限页打开提示窗口
+components/             # DNS / WHOIS / SSL 面板
+composables/            # useCachedResource（缓存/刷新/限流降级）
 lib/api                 # TCPLab / WHOIS API client
-lib/i18n                # 中英文文案、语言检测
+lib/cache.ts            # 本地缓存与 TTL
+lib/i18n                # 中英文文案、语言检测、API 错误映射
 lib/site                # URL 过滤、内网判断、tab 信息
 assets/css/main.css     # Tailwind + Nuxt UI + TCPLab 主题
 ```
 
 ## 产品规则
 
-- 有 popup 时不要写 `action.onClicked`；读取逻辑放在 popup 的 `onMounted`。
-- 只用 `activeTab` + `storage` + API `host_permissions`；不要 `tabs`、`<all_urls>`、`scripting`。
+- 点击 action 时用 `scripting.executeScript` 在当前 tab 注入/移除 `460px` fixed iframe；不要设置 `default_popup`。
+- 权限只用 `activeTab` + `scripting` + `storage` + API `host_permissions`；不要 `tabs`、`sidePanel`、`<all_urls>`。
+- 背景脚本把当前 tab 的 `url` / `title` 通过 query 参数传给 overlay；不要在页面内再查 tabs。
+- 关闭按钮通过 `postMessage({ type: 'tcplab:close' })` 通知父页面移除 iframe；再次点图标也是 toggle。
+- 悬浮层按 tab 独立：新 tab 不自动打开；页面刷新/导航后自然消失，需要重新点图标。
+- `chrome://` 等无法注入的页面：打开 420×640 的 popup 窗口显示提示。
+- 单页纵向排列：DNS → SSL → WHOIS，不要 tab；只保留页面整体滚动，不做面板内部滚动。
+- 顶部提供“刷新全部”，各面板保留单项刷新。
 - 只把 hostname 发送给 API，不发送完整 URL、查询参数或页面内容。
 - 跳过：`about:`、`chrome:`、`edge:`、`chrome-extension:`、`file:`、`view-source:`、`data:`、`blob:`、`javascript:`；`localhost`、`*.local`、`*.internal`、单标签主机名；RFC1918、回环、链路本地、CGNAT、IPv6 ULA 等内网 IP。
 - IP 判断用 `ipaddr.js`；不要在发请求前调用后端判断内网地址。
@@ -50,7 +60,7 @@ assets/css/main.css     # Tailwind + Nuxt UI + TCPLab 主题
 - WHOIS：`https://whois.tcp.lc/v1/whois/{domain}`（真实 HTTP 状态码，10 次/分钟）
 - `/api/v2/*` 的 HTTP 状态恒为 200，业务看 `body.code`；`body.msg` 是 i18n key。
 - 限流时读取 `retry-after`；保留旧缓存并提示，不要自动重试。
-- 多个请求用 `Promise.allSettled`，各区块独立展示 loading / error。
+- 多个请求独立加载，各区块独立展示 loading / error，不要让一个失败拖垮全部。
 
 ## 缓存
 
@@ -69,5 +79,5 @@ assets/css/main.css     # Tailwind + Nuxt UI + TCPLab 主题
 ## 其他
 
 - MVP 不做暗色模式。
-- MVP 不做 content script / sidepanel。
+- MVP 不注册常驻 content script；悬浮层只在点击时按需注入。
 - 未经允许不提交 Git。

@@ -3,8 +3,11 @@ import { storage } from 'wxt/utils/storage'
 import { en, type MessageKey } from './messages/en'
 import { zh } from './messages/zh'
 
+export type { MessageKey } from './messages/en'
+
 export type Locale = 'zh' | 'en'
 export type LocalePreference = 'auto' | Locale
+export type Translate = (key: MessageKey, params?: Record<string, string | number>) => string
 
 /** 手动设置优先；auto 表示每次按浏览器语言判断 */
 export const localePreference = storage.defineItem<LocalePreference>('local:locale', {

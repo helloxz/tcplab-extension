@@ -43,7 +43,7 @@ async function updateLanguage(value: string) {
             {{ t('options.title') }}
           </h1>
           <p class="text-sm text-muted">
-            {{ t('hello.subtitle') }}
+            {{ t('app.subtitle') }}
           </p>
         </div>
       </header>

@@ -9,11 +9,11 @@ description: 在 TCPLab 浏览器扩展（WXT + Vue 3 + Nuxt UI v4）中开发�
 
 ## 何时使用
 
-- 新建或修改 `entrypoints/`（popup、options、background、content script）
+- 新建或修改 `entrypoints/`（overlay、options、background、content script）
 - 配置 `wxt.config.ts`、manifest 权限、host_permissions
 - 使用 WXT 的 storage、messaging、content script UI、i18n
 - 调试 `wxt dev` / `wxt build` / `wxt zip`
-- 把 Vue 组件挂到 popup 或 content script
+- 把 Vue 组件挂到 overlay 或 content script
 - 需要确认 WXT API 的签名、生命周期或浏览器差异
 
 ## 先读文档
@@ -42,11 +42,12 @@ bash .opencode/skills/wxt/scripts/sync-docs.sh
 - **包管理**：`pnpm`、`pnpm dlx`；不要用 npm/npx。
 - **Vue**：`@wxt-dev/module-vue`；组件用 `<script setup lang="ts">`。
 - **UI**：Nuxt UI v4；每个 Vue 入口都必须用 `<UApp>` 包裹。主题与组件用法见 `nuxt-ui` skill。
-- **权限最小化**：当前只需要 `activeTab` + `storage` + API host_permissions；不要加 `tabs`、`<all_urls>`、`scripting`。
-- **读取当前页**：用 `browser.tabs.query({ active: true, currentWindow: true })`；`activeTab` 在用户点击扩展时临时授权，足够读取 `tab.url` / `tab.title`。
+- **权限最小化**：`activeTab` + `scripting` + `storage` + API host_permissions。不要 `tabs`、`sidePanel`、`<all_urls>`。
+- **读取当前页**：action click 的 `tab` 参数已经带 URL / title（activeTab 授权）；把它通过 query 参数传给 overlay 页面。
+- **悬浮层**：`entrypoints/overlay/` 是 unlisted 页面；background 用 `scripting.executeScript` 注入 fixed iframe，再次点击 action 时 toggle。关闭按钮用 `postMessage` 通知父页面移除。
 - **不要发完整 URL 给 API**：只发 hostname。
 - **API 错误**：TCPLab `/api/v2/*` 的 HTTP 状态恒为 200，业务看 `body.code`；`body.msg` 是 i18n key。
-- **部分失败**：多个 API 并行时用 `Promise.allSettled`，不要让一个失败拖垮全部。
+- **部分失败**：多个 API 独立加载，各区块独立展示 loading / error，不要让一个失败拖垮全部。
 - **缓存**：DNS 60 分钟、TLS 12 小时、WHOIS 24 小时；手动刷新绕过本地缓存；限流时保留旧数据并提示 `retry-after`。
 - **i18n**：浏览器语言 `zh*` → 中文，其他 → 英文；手动设置优先。MVP 不做暗色模式。
 - **不要提交 Git**：未经用户明确允许，不执行 commit。
@@ -55,7 +56,7 @@ bash .opencode/skills/wxt/scripts/sync-docs.sh
 
 ```text
 entrypoints/
-  popup/          # 点击扩展图标打开
+  overlay/        # 点击扩展图标注入的悬浮 iframe 页面
   options/        # 设置（语言等）
   background.ts   # service worker（预留 API 代理/缓存）
   content/        # 暂不启用；以后做页面注入再用
@@ -82,14 +83,27 @@ pnpm typecheck           # 先 pnpm build，确保 Nuxt UI dts 已生成
 
 ## 关键写法
 
-### Popup 读取当前 tab
+### Action click 注入悬浮层
 
 ```ts
-const [tab] = await browser.tabs.query({ active: true, currentWindow: true })
-if (!tab?.url) {
-  // 受限页面 / 浏览器内部页面
-}
+browser.action.onClicked.addListener((tab) => {
+  if (tab.id == null) return
+  const url = browser.runtime.getURL(
+    `/overlay.html?url=${encodeURIComponent(tab.url ?? '')}&title=${encodeURIComponent(tab.title ?? '')}`,
+  )
+  void browser.scripting.executeScript({
+    target: { tabId: tab.id },
+    func: (overlayUrl) => {
+      // 检查已有 #tcplab-extension-overlay-frame：有则移除，无则创建 fixed iframe
+    },
+    args: [url],
+  })
+})
 ```
+
+- `activeTab` 在 action click 时授权，足够读取当前 tab 的 URL / title。
+- 每个 tab 独立；新 tab 不会自动出现。页面刷新/导航后 iframe 自然消失。
+- 关闭按钮在 iframe 内 `window.parent.postMessage({ type: 'tcplab:close' }, '*')`。
 
 ### 用 WXT storage 保存设置
 
@@ -112,8 +126,10 @@ const unwatch = locale.watch((next) => console.log(next))
 ## 常见坑
 
 - `pnpm dev` 不自动打开浏览器：`web-ext` 是 WXT 的 optional peer dependency，必须单独 `pnpm add -D web-ext`。缺失时 WXT 会静默回退到 manual runner，只写 debug 日志。
-- 有 `default_popup` 时，`action.onClicked` 不会触发；读取逻辑放在 popup 的 `onMounted`。
-- `tabs` 权限会提示“读取浏览历史”；能用 `activeTab` 就不要用 `tabs`。
+- 有 `default_popup` 时，`action.onClicked` 不会触发；悬浮层方案不要设置 popup。
+- 需要 `scripting` + `activeTab` 才能注入；`<all_urls>` 不是必须的。
+- Firefox MV3 同样支持 `scripting.executeScript`；不要再用 MV2 的 `tabs.executeScript`。
+- iframe 需要加入 `web_accessible_resources`，否则页面无法加载 `overlay.html`。
 - content script 的 HMR 不是完整热更新；改完看 WXT 是否需要重载扩展。
 - WXT 在开发时动态注册 content scripts；manifest 里看不到是正常的。
 - Nuxt UI 的 `auto-imports.d.ts` / `components.d.ts` 由 Vite 插件生成；干净 checkout 下先 `pnpm build` 再 `pnpm typecheck`。
@@ -125,6 +141,6 @@ const unwatch = locale.watch((next) => console.log(next))
 1. `pnpm build` 成功，`.output/chrome-mv3` 可加载。
 2. `pnpm typecheck` 通过。
 3. manifest 权限最小化，host_permissions 只列实际 API 域名。
-4. popup 在 `chrome://` / `about:blank` / 内网地址下有友好提示。
+4. 悬浮层在 `chrome://` / `about:blank` / 内网地址下有友好提示（无法注入时弹 420×640 提示窗口）。
 5. 中英文切换、手动覆盖、刷新后保留设置。
 6. 限流、超时、部分失败都有可读提示。
