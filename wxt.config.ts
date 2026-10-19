@@ -7,7 +7,12 @@ export default defineConfig({
 
   modules: ['@wxt-dev/module-vue'],
 
-  manifest: {
+  // AMO 的源码包只需要扩展自身，不包含本地参考的后端源码
+  zip: {
+    excludeSources: ['tcplab/**', 'auto-imports.d.ts', 'components.d.ts'],
+  },
+
+  manifest: ({ browser }) => ({
     default_locale: 'en',
     name: '__MSG_extName__',
     description: '__MSG_extDescription__',
@@ -25,7 +30,23 @@ export default defineConfig({
         matches: ['<all_urls>'],
       },
     ],
-  },
+    ...(browser === 'firefox'
+      ? {
+          browser_specific_settings: {
+            gecko: {
+              id: 'support@tcp.lc',
+              strict_min_version: '140.0',
+              data_collection_permissions: {
+                required: ['browsingActivity'],
+              },
+            },
+            gecko_android: {
+              strict_min_version: '142.0',
+            },
+          },
+        }
+      : {}),
+  }),
 
   vite: () => ({
     plugins: [
