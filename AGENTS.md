@@ -27,8 +27,9 @@ pnpm zip
 
 ```text
 entrypoints/overlay     # 悬浮层页面，单页展示 DNS / WHOIS / SSL
+entrypoints/restricted  # 受限页的 action popup 提示（不写入 default_popup）
 entrypoints/options     # 语言设置
-entrypoints/background  # action click → 注入/移除 iframe；受限页打开提示窗口
+entrypoints/background  # action click → 注入/移除 iframe；受限页弹 action popup
 components/             # DNS / WHOIS / SSL 面板
 composables/            # useCachedResource（缓存/刷新/限流降级）、useIpGeo（IP 归属地）
 lib/api                 # TCPLab / WHOIS / ICP API client
@@ -41,12 +42,14 @@ assets/css/main.css     # Tailwind + Nuxt UI + TCPLab 主题
 
 ## 产品规则
 
-- 点击 action 时用 `scripting.executeScript` 在当前 tab 注入/移除 `460px` fixed iframe；不要设置 `default_popup`。
+- 点击 action 时用 `scripting.executeScript` 在当前 tab 注入/移除 `460px` fixed iframe；manifest 不要设置 `default_popup`（会让 `onClicked` 失效）。
 - 权限只用 `activeTab` + `scripting` + `storage` + API `host_permissions`；不要 `tabs`、`sidePanel`、`<all_urls>`。
 - 背景脚本把当前 tab 的 `url` / `title` 通过 query 参数传给 overlay；不要在页面内再查 tabs。
 - 关闭按钮通过 `postMessage({ type: 'tcplab:close' })` 通知父页面移除 iframe；再次点图标也是 toggle。
 - 悬浮层按 tab 独立：新 tab 不自动打开；页面刷新/导航后自然消失，需要重新点图标。
-- `chrome://` 等无法注入的页面：打开 420×640 的 popup 窗口显示提示。
+- `chrome://` 等无法注入的页面：点击时用 `action.setPopup({ tabId })` + `action.openPopup()` 在图标下方弹出 340px 宽的提示页（`restricted.html`），不打开独立窗口。
+- per-tab popup 只用于受限页，且要在 `tabs.onActivated` / `tabs.onUpdated` 时清掉；否则该 tab 之后的点击会被 popup 拦截，无法进入 `onClicked`。
+- `openPopup()` 不可用或被拒绝（Chrome < 127、窗口不可用）时，才兜底打开 420×640 的 popup 窗口。
 - 单页纵向排列：DNS → WHOIS → SSL，不要 tab；只保留页面整体滚动，不做面板内部滚动。
 - 顶部提供“刷新全部”，各面板保留单项刷新。
 - 只把 hostname 和 DNS 解析出的 IP 发送给 API，不发送完整 URL、查询参数或页面内容。

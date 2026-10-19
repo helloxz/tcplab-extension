@@ -141,6 +141,6 @@ const unwatch = locale.watch((next) => console.log(next))
 1. `pnpm build` 成功，`.output/chrome-mv3` 可加载。
 2. `pnpm typecheck` 通过。
 3. manifest 权限最小化，host_permissions 只列实际 API 域名。
-4. 悬浮层在 `chrome://` / `about:blank` / 内网地址下有友好提示（无法注入时弹 420×640 提示窗口）。
+4. 悬浮层在 `chrome://` / `about:blank` / 内网地址下有友好提示（无法注入时在工具栏图标下方弹 action popup）。
 5. 中英文切换、手动覆盖、刷新后保留设置。
 6. 限流、超时、部分失败都有可读提示。

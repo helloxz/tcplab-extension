@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TCPLab</title>
+    <style>
+      :root {
+        --tc-warning: oklch(79.5% 0.184 86.047);
+        --tc-bg: #fafaf9;
+        --tc-text: #1a1a18;
+      }
+
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        width: 340px;
+        margin: 0;
+      }
+
+      body {
+        background-color: var(--tc-bg);
+        color: var(--tc-text);
+        font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+          "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC",
+          sans-serif;
+        font-size: 16px;
+        line-height: 24px;
+      }
+
+      .app {
+        width: 340px;
+        padding: 12px;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .brand img {
+        width: 24px;
+        height: 24px;
+        object-fit: contain;
+      }
+
+      .brand-name {
+        font-size: 14px;
+        font-weight: 600;
+        line-height: 20px;
+      }
+
+      .alert {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        margin-top: 10px;
+        padding: 16px;
+        border-radius: 8px;
+        color: var(--tc-warning);
+        background-color: color-mix(in oklab, var(--tc-warning) 10%, transparent);
+        box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--tc-warning) 25%, transparent);
+      }
+
+      .alert svg {
+        flex: none;
+        width: 20px;
+        height: 20px;
+      }
+
+      .alert-title {
+        font-size: 14px;
+        font-weight: 500;
+        line-height: 20px;
+      }
+
+      .alert-desc {
+        margin-top: 4px;
+        font-size: 14px;
+        line-height: 20px;
+        opacity: 0.9;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <div class="brand">
+        <img src="/icon/128.png" alt="" width="24" height="24" />
+        <span class="brand-name">TCPLab</span>
+      </div>
+
+      <div class="alert" role="alert">
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1zm-8-5v4m0 4h.01" />
+        </svg>
+
+        <div>
+          <div class="alert-title" data-title>This page cannot be inspected</div>
+          <div class="alert-desc" data-description>Open a public http/https page and try again.</div>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

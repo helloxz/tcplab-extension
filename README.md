@@ -53,7 +53,7 @@ The overlay belongs to the current tab. It disappears when the page reloads or n
 
 ## Supported pages
 
-TCPLab only inspects public web pages. Browser-internal pages, extension pages, local files, blank tabs and private/local addresses are rejected. TCPLab shows a notice inside the overlay, or opens a small popup window when the page cannot be injected at all (for example `chrome://` pages). Examples of rejected pages include:
+TCPLab only inspects public web pages. Browser-internal pages, extension pages, local files, blank tabs and private/local addresses are rejected. TCPLab shows a notice inside the overlay, or a compact popup below the toolbar icon when the page cannot be injected at all (for example `chrome://` pages). Examples of rejected pages include:
 
 - `chrome://`, `edge://`, `about:`, `file:`, `view-source:`, `data:`, `blob:`, and other non-web schemes
 - `localhost`, `*.local`, `*.internal`, and single-label hostnames
