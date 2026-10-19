@@ -7,6 +7,16 @@ const { locale, preference, t, setPreference } = useI18n()
 
 const uiLocale = computed(() => (locale.value === 'zh' ? zhLocale : enLocale))
 
+const version = browser.runtime.getManifest().version
+const repositoryUrl = 'https://github.com/helloxz/tcplab-extension'
+const issuesUrl = `${repositoryUrl}/issues`
+const licenseUrl = `${repositoryUrl}/blob/main/LICENSE`
+const privacyUrl = computed(() => (
+  locale.value === 'zh'
+    ? 'https://tcp.lc/zh/page/privacy'
+    : 'https://tcp.lc/page/privacy'
+))
+
 const items = computed(() => [
   { label: t('options.language.auto'), value: 'auto' },
   { label: t('options.language.zh'), value: 'zh' },
@@ -70,6 +80,48 @@ async function updateLanguage(value: string) {
           </p>
         </div>
       </UCard>
+
+      <footer class="mt-6 border-t border-default pt-4">
+        <div class="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-dimmed">
+          <span class="font-mono">{{ t('options.about.version', { version }) }}</span>
+          <span aria-hidden="true">·</span>
+          <a
+            :href="repositoryUrl"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="transition hover:text-highlighted hover:underline"
+          >
+            {{ t('options.about.source') }}
+          </a>
+          <span aria-hidden="true">·</span>
+          <a
+            :href="issuesUrl"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="transition hover:text-highlighted hover:underline"
+          >
+            {{ t('options.about.issues') }}
+          </a>
+          <span aria-hidden="true">·</span>
+          <a
+            :href="licenseUrl"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="transition hover:text-highlighted hover:underline"
+          >
+            {{ t('options.about.license') }}
+          </a>
+          <span aria-hidden="true">·</span>
+          <a
+            :href="privacyUrl"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="transition hover:text-highlighted hover:underline"
+          >
+            {{ t('options.about.privacy') }}
+          </a>
+        </div>
+      </footer>
     </main>
   </UApp>
 </template>

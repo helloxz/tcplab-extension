@@ -141,4 +141,10 @@ export const zh: Record<MessageKey, string> = {
   'options.language.en': 'English',
   'options.languageHint': '手动选择优先于浏览器语言。选择“自动”可重新跟随浏览器。',
   'options.saved': '已保存',
+
+  'options.about.version': 'v{version}',
+  'options.about.source': '开源代码',
+  'options.about.issues': '问题反馈',
+  'options.about.license': 'AGPL-3.0',
+  'options.about.privacy': '隐私说明',
 }

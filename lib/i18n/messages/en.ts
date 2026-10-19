@@ -139,6 +139,12 @@ export const en = {
   'options.language.en': 'English',
   'options.languageHint': 'A manual choice overrides the browser language. Choose Auto to follow it again.',
   'options.saved': 'Saved',
+
+  'options.about.version': 'v{version}',
+  'options.about.source': 'Source code',
+  'options.about.issues': 'Issues',
+  'options.about.license': 'AGPL-3.0',
+  'options.about.privacy': 'Privacy',
 } as const
 
 export type MessageKey = keyof typeof en
