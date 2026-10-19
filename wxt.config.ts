@@ -8,8 +8,9 @@ export default defineConfig({
   modules: ['@wxt-dev/module-vue'],
 
   manifest: {
-    name: 'TCPLab',
-    description: 'Inspect the current public page: DNS, WHOIS and TLS.',
+    default_locale: 'en',
+    name: '__MSG_extName__',
+    description: '__MSG_extDescription__',
     permissions: ['activeTab', 'scripting', 'storage'],
     host_permissions: [
       'https://tcp.lc/*',

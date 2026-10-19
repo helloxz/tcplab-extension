@@ -1,0 +1,10 @@
+{
+  "extName": {
+    "message": "TCPLab - DNS, WHOIS & SSL Inspector",
+    "description": "Extension name shown in the Chrome Web Store and the browser."
+  },
+  "extDescription": {
+    "message": "Inspect the current page's DNS, WHOIS and SSL/TLS in a panel on the right. One click, no tab switching.",
+    "description": "Short store description, max 132 characters."
+  }
+}
