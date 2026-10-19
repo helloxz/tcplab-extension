@@ -4,7 +4,8 @@ import { useCachedResource } from '@/composables/useCachedResource'
 import { lookupWhois } from '@/lib/api/whois'
 import type { WhoisResult } from '@/lib/api/types'
 import { CACHE_TTL_MS, cacheKey } from '@/lib/cache'
-import { formatDate, formatRetryAfter, formatTime } from '@/lib/format'
+import { domainAgeMonths, formatDate, formatDomainAge, formatRetryAfter } from '@/lib/format'
+import { WHOIS_STATUS_KEYS } from '@/lib/whois-status'
 import type { Locale, Translate } from '@/lib/i18n'
 import { translateApiError } from '@/lib/i18n/api-errors'
 
@@ -15,12 +16,28 @@ const props = defineProps<{
   t: Translate
 }>()
 
-const { status, data, error, fromCache, stale, fetchedAt, load } = useCachedResource<WhoisResult>({
+const { status, data, error, fromCache, stale, load } = useCachedResource<WhoisResult>({
   cacheKey: () => cacheKey('whois', props.hostname),
   ttl: CACHE_TTL_MS.whois,
   enabled: () => !props.isIp && !!props.hostname,
   fetcher: () => lookupWhois(props.hostname),
 })
+
+const domainAge = computed(() => formatDomainAge(data.value?.dates.created, props.t))
+
+/** 域名年龄配色：<1 年 warning，1–10 年 info，>=10 年 success */
+const domainAgeColor = computed<'neutral' | 'warning' | 'info' | 'success'>(() => {
+  const months = domainAgeMonths(data.value?.dates.created)
+  if (months === null) return 'neutral'
+  if (months < 12) return 'warning'
+  if (months < 120) return 'info'
+  return 'success'
+})
+
+const statusItems = computed(() => (data.value?.status ?? []).map((code) => ({
+  code,
+  key: WHOIS_STATUS_KEYS[code],
+})))
 
 const retryText = computed(() => {
   const current = error.value
@@ -80,10 +97,6 @@ defineExpose({ refresh })
         </div>
       </div>
 
-      <p v-if="fetchedAt" class="mt-1 text-[11px] text-dimmed">
-        {{ t('popup.updatedAt', { time: formatTime(fetchedAt, locale) }) }}
-      </p>
-
       <UAlert
         v-if="error && data"
         class="mt-2"
@@ -126,16 +139,13 @@ defineExpose({ refresh })
               {{ data.registrar.name || t('common.none') }}
             </dd>
 
-            <template v-if="data.registrar.ianaId">
-              <dt class="text-dimmed">{{ t('whois.ianaId') }}</dt>
-              <dd class="text-highlighted">{{ data.registrar.ianaId }}</dd>
-            </template>
-
-            <dt class="text-dimmed">{{ t('whois.created') }}</dt>
-            <dd class="text-highlighted">{{ formatDate(data.dates.created, locale) }}</dd>
-
-            <dt class="text-dimmed">{{ t('whois.updated') }}</dt>
-            <dd class="text-highlighted">{{ formatDate(data.dates.updated, locale) }}</dd>
+            <dt class="self-center text-dimmed">{{ t('whois.created') }}</dt>
+            <dd class="flex flex-wrap items-center gap-1.5 text-highlighted">
+              <span>{{ formatDate(data.dates.created, locale) }}</span>
+              <UBadge v-if="domainAge" :color="domainAgeColor" variant="subtle" size="sm">
+                {{ domainAge }}
+              </UBadge>
+            </dd>
 
             <dt class="text-dimmed">{{ t('whois.expires') }}</dt>
             <dd class="text-highlighted">{{ formatDate(data.dates.expires, locale) }}</dd>
@@ -167,26 +177,39 @@ defineExpose({ refresh })
             </p>
           </div>
 
-          <div v-if="data.status.length" class="mt-3">
+          <div v-if="statusItems.length" class="mt-3">
             <p class="text-xs font-medium text-dimmed">
               {{ t('whois.status') }}
             </p>
             <div class="mt-1 flex flex-wrap gap-1">
-              <UBadge
-                v-for="statusItem in data.status"
-                :key="statusItem"
-                color="neutral"
-                variant="subtle"
-                size="sm"
-              >
-                {{ statusItem }}
-              </UBadge>
+              <template v-for="item in statusItems" :key="item.code">
+                <UTooltip
+                  v-if="item.key"
+                  :text="t(item.key)"
+                  :ui="{ content: 'h-auto max-w-64 px-3 py-2', text: 'whitespace-normal leading-relaxed' }"
+                >
+                  <UBadge
+                    color="neutral"
+                    variant="subtle"
+                    size="sm"
+                    tabindex="0"
+                    class="cursor-help font-mono"
+                  >
+                    {{ item.code }}
+                  </UBadge>
+                </UTooltip>
+                <UBadge
+                  v-else
+                  color="neutral"
+                  variant="subtle"
+                  size="sm"
+                  class="font-mono"
+                >
+                  {{ item.code }}
+                </UBadge>
+              </template>
             </div>
           </div>
-
-          <p class="mt-3 text-[11px] text-dimmed">
-            {{ t('whois.source', { source: data.meta.source || t('common.none') }) }}
-          </p>
         </template>
       </div>
     </template>

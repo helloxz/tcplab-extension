@@ -11,6 +11,8 @@ export const CACHE_TTL_MS = {
   dns: 60 * 60 * 1000,
   tls: 12 * 60 * 60 * 1000,
   whois: 24 * 60 * 60 * 1000,
+  /** IP 归属地变动很小，放宽到 7 天以减少额外请求 */
+  ipGeo: 7 * 24 * 60 * 60 * 1000,
 } as const
 
 export type CacheKind = keyof typeof CACHE_TTL_MS

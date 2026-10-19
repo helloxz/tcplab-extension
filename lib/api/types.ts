@@ -92,6 +92,38 @@ export interface TlsCheckResult {
   }
 }
 
+/** IP 归属数据来源：国内 v4（对外品牌名 TCPLab）/ 国内 v6 / 全球兜底 */
+export type IpLookupSource = 'TCPLab' | 'geocn' | 'geolite2'
+
+/** 单个 IP 的归属查询结果（字段已由后端归一化，空值均为空串 / null） */
+export interface IpLookupResult {
+  target: string
+  ip: string
+  version: 4 | 6
+  /** 域名解析出的地址列表；直接查询 IP 时为空数组 */
+  addresses: string[]
+  /** 命中数据源；无任何数据时为 null */
+  source: IpLookupSource | null
+  isDomestic: boolean
+  /** ISO 3166-1 alpha-2 国家代码，如 CN / US；未知为空串 */
+  country: string
+  /** 按查询语言本地化的国家名 */
+  countryName: string
+  province: string
+  city: string
+  district: string
+  /** 运营商，仅国内库提供；海外为空串 */
+  isp: string
+  /** 网络类型（宽带 / 基站等），仅国内 IPv6 库提供 */
+  type: string
+  /** 行政区划代码，仅国内库提供 */
+  adcode: string
+  longitude: number | null
+  latitude: number | null
+  /** 时区，仅全球库提供 */
+  timezone: string
+}
+
 export interface WhoisRegistrar {
   name: string | null
   ianaId: string | null

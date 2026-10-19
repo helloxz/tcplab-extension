@@ -116,9 +116,11 @@ function openSettings() {
       <header class="sticky top-0 z-10 border-b border-default bg-default px-3 py-2.5">
         <div class="flex items-center justify-between gap-3">
           <div class="flex min-w-0 items-center gap-2.5">
-            <div class="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary text-inverted">
-              <UIcon name="i-lucide-activity" class="size-5" />
-            </div>
+            <img
+              src="/icon/128.png"
+              alt="TCPLab"
+              class="size-9 shrink-0 object-contain"
+            >
             <div class="min-w-0">
               <h1 class="truncate text-sm font-semibold text-highlighted">
                 {{ t('app.name') }}
@@ -223,12 +225,10 @@ function openSettings() {
           </UCard>
 
           <UCard :ui="{ body: 'p-3 sm:p-3' }">
-            <TlsPanel
-              :key="`tls-${siteKey}`"
-              ref="tlsRef"
+            <WhoisPanel
+              :key="`whois-${siteKey}`"
+              ref="whoisRef"
               :hostname="page.site.hostname"
-              :port="tlsPort"
-              :is-https="isHttps"
               :is-ip="page.site.isIp"
               :locale="locale"
               :t="t"
@@ -236,10 +236,12 @@ function openSettings() {
           </UCard>
 
           <UCard :ui="{ body: 'p-3 sm:p-3' }">
-            <WhoisPanel
-              :key="`whois-${siteKey}`"
-              ref="whoisRef"
+            <TlsPanel
+              :key="`tls-${siteKey}`"
+              ref="tlsRef"
               :hostname="page.site.hostname"
+              :port="tlsPort"
+              :is-https="isHttps"
               :is-ip="page.site.isIp"
               :locale="locale"
               :t="t"

@@ -1,0 +1,11 @@
+/* 悬浮层自身隐藏滚动条：避免与宿主页面右侧滚动条重叠形成双滚动条。
+   仅作用于 overlay 入口，设置页仍保留 main.css 的细滚动条。 */
+html,
+body {
+  scrollbar-width: none;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  display: none;
+}

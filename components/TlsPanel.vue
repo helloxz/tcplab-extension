@@ -4,7 +4,8 @@ import { useCachedResource } from '@/composables/useCachedResource'
 import { checkTls } from '@/lib/api/tls'
 import type { TlsCheckResult, TlsValidationIssue } from '@/lib/api/types'
 import { CACHE_TTL_MS, cacheKey } from '@/lib/cache'
-import { formatDate, formatRetryAfter, formatTime } from '@/lib/format'
+import { formatDate, formatRetryAfter } from '@/lib/format'
+import { tlsVersionGrade } from '@/lib/tls-grade'
 import type { Locale, MessageKey, Translate } from '@/lib/i18n'
 import { translateApiError } from '@/lib/i18n/api-errors'
 
@@ -30,7 +31,7 @@ function probeHost(): string {
   return props.isIp && props.hostname.includes(':') ? `[${props.hostname}]` : props.hostname
 }
 
-const { status, data, error, fromCache, stale, fetchedAt, load } = useCachedResource<TlsCheckResult>({
+const { status, data, error, fromCache, stale, load } = useCachedResource<TlsCheckResult>({
   cacheKey: () => cacheKey('tls', props.hostname, String(props.port)),
   ttl: CACHE_TTL_MS.tls,
   enabled: () => !!props.hostname,
@@ -52,11 +53,12 @@ const expiryText = computed(() => {
   return props.t('tls.daysRemaining', { days })
 })
 
-const expiryColor = computed(() => {
+const expiryColor = computed<'neutral' | 'error' | 'warning' | 'info' | 'success'>(() => {
   const days = data.value?.certificate.daysRemaining
   if (days == null) return 'neutral'
   if (days < 0) return 'error'
   if (days <= 30) return 'warning'
+  if (days <= 60) return 'info'
   return 'success'
 })
 
@@ -66,6 +68,20 @@ const publicKeyText = computed(() => {
   return [cert.publicKeyAlgorithm, cert.publicKeyBits ? `${cert.publicKeyBits} bit` : '']
     .filter(Boolean)
     .join(' ')
+})
+
+/** TLS 版本配色：1.3 绿色、1.2 蓝色、1.0/1.1 及 SSL 橙色 */
+const versionColor = computed<'neutral' | 'success' | 'info' | 'warning'>(() => {
+  switch (tlsVersionGrade(data.value?.connection.version)) {
+    case 'modern':
+      return 'success'
+    case 'acceptable':
+      return 'info'
+    case 'deprecated':
+      return 'warning'
+    default:
+      return 'neutral'
+  }
 })
 
 const retryText = computed(() => {
@@ -121,9 +137,6 @@ defineExpose({ refresh })
       </div>
     </div>
 
-    <p v-if="fetchedAt" class="mt-1 text-[11px] text-dimmed">
-      {{ t('popup.updatedAt', { time: formatTime(fetchedAt, locale) }) }}
-    </p>
     <p v-if="!isHttps" class="mt-1 text-[11px] text-dimmed">
       {{ t('popup.httpTlsNote') }}
     </p>
@@ -196,10 +209,10 @@ defineExpose({ refresh })
           <dt class="text-dimmed">{{ t('tls.validFrom') }}</dt>
           <dd class="text-highlighted">{{ formatDate(data.certificate.validFrom, locale) }}</dd>
 
-          <dt class="text-dimmed">{{ t('tls.validTo') }}</dt>
+          <dt class="self-center text-dimmed">{{ t('tls.validTo') }}</dt>
           <dd class="flex flex-wrap items-center gap-1.5 text-highlighted">
             <span>{{ formatDate(data.certificate.validTo, locale) }}</span>
-            <UBadge :color="expiryColor" variant="subtle" size="sm">
+            <UBadge v-if="expiryText" :color="expiryColor" variant="subtle" size="sm">
               {{ expiryText }}
             </UBadge>
           </dd>
@@ -231,19 +244,42 @@ defineExpose({ refresh })
           {{ t('tls.connection') }}
         </p>
         <dl class="mt-1.5 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5 text-xs">
-          <dt class="text-dimmed">{{ t('tls.version') }}</dt>
-          <dd class="text-highlighted">{{ data.connection.version }}</dd>
+          <dt class="self-center text-dimmed">{{ t('tls.version') }}</dt>
+          <dd class="text-highlighted">
+            <UBadge :color="versionColor" variant="subtle" size="sm">
+              {{ data.connection.version }}
+            </UBadge>
+          </dd>
 
           <dt class="text-dimmed">{{ t('tls.cipher') }}</dt>
           <dd class="min-w-0 break-words font-mono text-[11px] text-highlighted">
             {{ data.connection.cipher }}
           </dd>
 
+          <dt class="self-center text-dimmed">{{ t('tls.forwardSecrecy') }}</dt>
+          <dd class="text-highlighted">
+            <UBadge
+              :color="data.connection.forwardSecrecy ? 'success' : 'warning'"
+              variant="subtle"
+              size="sm"
+            >
+              {{ data.connection.forwardSecrecy ? t('common.yes') : t('common.no') }}
+            </UBadge>
+          </dd>
+
           <dt class="text-dimmed">{{ t('tls.alpn') }}</dt>
           <dd class="text-highlighted">{{ data.connection.alpn || t('common.none') }}</dd>
 
-          <dt class="text-dimmed">{{ t('tls.http2') }}</dt>
-          <dd class="text-highlighted">{{ data.connection.http2 ? t('common.yes') : t('common.no') }}</dd>
+          <dt class="self-center text-dimmed">{{ t('tls.http2') }}</dt>
+          <dd class="text-highlighted">
+            <UBadge
+              :color="data.connection.http2 ? 'success' : 'neutral'"
+              variant="subtle"
+              size="sm"
+            >
+              {{ data.connection.http2 ? t('common.yes') : t('common.no') }}
+            </UBadge>
+          </dd>
 
           <dt class="text-dimmed">{{ t('tls.ipAddress') }}</dt>
           <dd class="font-mono text-[11px] text-highlighted">{{ data.ip }}</dd>

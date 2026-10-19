@@ -26,11 +26,11 @@ pnpm zip
 ## 目录
 
 ```text
-entrypoints/overlay     # 悬浮层页面，单页展示 DNS / SSL / WHOIS
+entrypoints/overlay     # 悬浮层页面，单页展示 DNS / WHOIS / SSL
 entrypoints/options     # 语言设置
 entrypoints/background  # action click → 注入/移除 iframe；受限页打开提示窗口
 components/             # DNS / WHOIS / SSL 面板
-composables/            # useCachedResource（缓存/刷新/限流降级）
+composables/            # useCachedResource（缓存/刷新/限流降级）、useIpGeo（IP 归属地）
 lib/api                 # TCPLab / WHOIS API client
 lib/cache.ts            # 本地缓存与 TTL
 lib/i18n                # 中英文文案、语言检测、API 错误映射
@@ -46,9 +46,10 @@ assets/css/main.css     # Tailwind + Nuxt UI + TCPLab 主题
 - 关闭按钮通过 `postMessage({ type: 'tcplab:close' })` 通知父页面移除 iframe；再次点图标也是 toggle。
 - 悬浮层按 tab 独立：新 tab 不自动打开；页面刷新/导航后自然消失，需要重新点图标。
 - `chrome://` 等无法注入的页面：打开 420×640 的 popup 窗口显示提示。
-- 单页纵向排列：DNS → SSL → WHOIS，不要 tab；只保留页面整体滚动，不做面板内部滚动。
+- 单页纵向排列：DNS → WHOIS → SSL，不要 tab；只保留页面整体滚动，不做面板内部滚动。
 - 顶部提供“刷新全部”，各面板保留单项刷新。
-- 只把 hostname 发送给 API，不发送完整 URL、查询参数或页面内容。
+- 只把 hostname 和 DNS 解析出的 IP 发送给 API，不发送完整 URL、查询参数或页面内容。
+- DNS 面板默认只展示第一条 A / AAAA，其余记录可按组展开；首条记录下方展示对应 IP 的归属地，只查这两个 IP，失败时静默隐藏。
 - 跳过：`about:`、`chrome:`、`edge:`、`chrome-extension:`、`file:`、`view-source:`、`data:`、`blob:`、`javascript:`；`localhost`、`*.local`、`*.internal`、单标签主机名；RFC1918、回环、链路本地、CGNAT、IPv6 ULA 等内网 IP。
 - IP 判断用 `ipaddr.js`；不要在发请求前调用后端判断内网地址。
 - WHOIS 直接传当前 hostname，后端会归一化为可注册域名；不要引入 tldts。
@@ -57,6 +58,7 @@ assets/css/main.css     # Tailwind + Nuxt UI + TCPLab 主题
 ## API
 
 - 主 API：`https://tcp.lc/api/v2/*`
+- IP 归属：`https://tcp.lc/api/v2/ip/{ip}?lang=zh|en`（单 IP 60 次/分钟、1000 次/天）
 - WHOIS：`https://whois.tcp.lc/v1/whois/{domain}`（真实 HTTP 状态码，10 次/分钟）
 - `/api/v2/*` 的 HTTP 状态恒为 200，业务看 `body.code`；`body.msg` 是 i18n key。
 - 限流时读取 `retry-after`；保留旧缓存并提示，不要自动重试。
@@ -67,6 +69,7 @@ assets/css/main.css     # Tailwind + Nuxt UI + TCPLab 主题
 - DNS：60 分钟
 - TLS：12 小时
 - WHOIS：24 小时
+- IP 归属：7 天
 - 手动刷新绕过本地缓存；限流时继续展示旧数据。
 
 ## 国际化

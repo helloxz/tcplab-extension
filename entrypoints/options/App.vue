@@ -35,9 +35,11 @@ async function updateLanguage(value: string) {
   <UApp :locale="uiLocale">
     <main class="mx-auto max-w-xl p-6">
       <header class="flex items-center gap-3">
-        <div class="flex size-10 items-center justify-center rounded-lg bg-primary text-inverted">
-          <UIcon name="i-lucide-activity" class="size-5" />
-        </div>
+        <img
+          src="/icon/128.png"
+          alt="TCPLab"
+          class="size-10 shrink-0 object-contain"
+        >
         <div>
           <h1 class="text-lg font-semibold text-highlighted">
             {{ t('options.title') }}
