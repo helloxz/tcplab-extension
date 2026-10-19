@@ -1,0 +1,75 @@
+@import "tailwindcss";
+@import "@nuxt/ui";
+
+/* ==========================================================================
+   TCPLab 设计系统 — Signal Console
+   与后端保持一致：信号琥珀 + 石墨中性色。
+   MVP 仅亮色；保留 :root/:host 写法，方便以后在 Shadow Root 中复用。
+   ========================================================================== */
+
+@theme static {
+  --color-brand-50: #fffaf0;
+  --color-brand-100: #fdf1d9;
+  --color-brand-200: #f9dda8;
+  --color-brand-300: #f3c272;
+  --color-brand-400: #eda43c;
+  --color-brand-500: #c97c14;
+  --color-brand-600: #a96510;
+  --color-brand-700: #8a520f;
+  --color-brand-800: #6e4210;
+  --color-brand-900: #5a3710;
+  --color-brand-950: #331e08;
+
+  --color-graphite-50: #fafaf9;
+  --color-graphite-100: #f4f4f2;
+  --color-graphite-200: #e6e6e3;
+  --color-graphite-300: #d3d3ce;
+  --color-graphite-400: #a6a69e;
+  --color-graphite-500: #74746c;
+  --color-graphite-600: #55554e;
+  --color-graphite-700: #41413b;
+  --color-graphite-800: #282826;
+  --color-graphite-900: #1a1a18;
+  --color-graphite-950: #0d0d0c;
+}
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+    "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC",
+    sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas,
+    monospace;
+}
+
+:root,
+:host {
+  --ui-radius: 0.25rem;
+  --ui-primary: var(--color-brand-600);
+}
+
+html,
+body,
+#app {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background-color: var(--color-graphite-50);
+  color: var(--color-graphite-900);
+  font-family: var(--font-sans);
+}
+
+@layer base {
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+
+  [role="option"]:not([data-disabled]),
+  [role="menuitem"]:not([data-disabled]),
+  [role="menuitemcheckbox"]:not([data-disabled]),
+  [role="menuitemradio"]:not([data-disabled]) {
+    cursor: pointer;
+  }
+}

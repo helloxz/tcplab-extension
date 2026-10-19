@@ -1,0 +1,27 @@
+export const en = {
+  'app.name': 'TCPLab',
+  'hello.title': 'Hello TCPLab',
+  'hello.subtitle': 'Network toolbox for the current page',
+  'popup.currentPage': 'Current page',
+  'popup.settings': 'Settings',
+  'popup.loading': 'Reading the current page…',
+  'popup.unsupported.title': 'This page cannot be inspected',
+  'popup.unsupported.blank': 'This is a blank page. Open a public website and try again.',
+  'popup.unsupported.internal': 'This is a browser-internal page. TCPLab only reads public http/https pages.',
+  'popup.unsupported.local': 'This is a local or private address. TCPLab does not send it to any API.',
+  'popup.unsupported.invalid': 'The current page URL cannot be read. Try refreshing the page.',
+  'popup.next.title': 'Foundation ready',
+  'popup.next.hint': 'DNS, WHOIS and TLS panels will be connected to the TCPLab API next.',
+  'options.title': 'Settings',
+  'options.language': 'Language',
+  'options.language.auto': 'Auto (browser language)',
+  'options.language.zh': '中文',
+  'options.language.en': 'English',
+  'options.languageHint': 'A manual choice overrides the browser language. Choose Auto to follow it again.',
+  'options.saved': 'Saved',
+  'common.http': 'HTTP',
+  'common.https': 'HTTPS',
+  'common.ip': 'IP',
+} as const
+
+export type MessageKey = keyof typeof en

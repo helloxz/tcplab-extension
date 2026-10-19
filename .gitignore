@@ -1,0 +1,23 @@
+# 后端源码仅作本地参考，不纳入扩展仓库
+tcplab
+
+# 依赖与构建产物
+node_modules
+.output
+.wxt
+stats.html
+web-ext.config.ts
+
+# Nuxt UI / Vite 自动生成
+auto-imports.d.ts
+components.d.ts
+
+# 环境变量与本地文件
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+
+# OpenChamber 工具产物（截图等）
+.openchamber

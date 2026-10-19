@@ -1,0 +1,27 @@
+import type { MessageKey } from './en'
+
+export const zh: Record<MessageKey, string> = {
+  'app.name': 'TCPLab',
+  'hello.title': '你好，TCPLab',
+  'hello.subtitle': '当前页面的网络工具箱',
+  'popup.currentPage': '当前页面',
+  'popup.settings': '设置',
+  'popup.loading': '正在读取当前页面…',
+  'popup.unsupported.title': '无法读取当前页面',
+  'popup.unsupported.blank': '当前是空白页。请打开一个公开网站后再试。',
+  'popup.unsupported.internal': '当前是浏览器内部页面。TCPLab 只读取公开的 http/https 页面。',
+  'popup.unsupported.local': '当前是本地或内网地址。TCPLab 不会把它发送到任何 API。',
+  'popup.unsupported.invalid': '无法识别当前页面地址。请刷新页面后再试。',
+  'popup.next.title': '基础框架已就绪',
+  'popup.next.hint': '下一步将接入 TCPLab API，展示 DNS、WHOIS 和 TLS 信息。',
+  'options.title': '设置',
+  'options.language': '语言',
+  'options.language.auto': '自动（跟随浏览器）',
+  'options.language.zh': '中文',
+  'options.language.en': 'English',
+  'options.languageHint': '手动选择优先于浏览器语言。选择“自动”可重新跟随浏览器。',
+  'options.saved': '已保存',
+  'common.http': 'HTTP',
+  'common.https': 'HTTPS',
+  'common.ip': 'IP',
+}
