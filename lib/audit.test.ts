@@ -173,6 +173,30 @@ describe('computeAudit', () => {
     const result = computeAudit({ dns: dns({ aaaa: [] }), whois: whois(), tls: tls(), now })
     expect(result?.checks.find(check => check.id === 'ipv6')?.earned).toBe(0)
   })
+
+  it('uses the browser-measured protocol for the HTTP/2 check when available', () => {
+    const backendOnlyHttp1 = tls()
+    backendOnlyHttp1.connection.http2 = false
+    backendOnlyHttp1.connection.alpn = 'http/1.1'
+
+    const h3 = computeAudit({
+      dns: dns(),
+      whois: whois(),
+      tls: backendOnlyHttp1,
+      httpProtocol: 'h3',
+      now,
+    })
+    expect(h3?.checks.find(check => check.id === 'http2')?.earned).toBe(10)
+
+    const h1 = computeAudit({
+      dns: dns(),
+      whois: whois(),
+      tls: tls(),
+      httpProtocol: 'http/1.1',
+      now,
+    })
+    expect(h1?.checks.find(check => check.id === 'http2')?.earned).toBe(0)
+  })
 })
 
 describe('gradeForScore', () => {

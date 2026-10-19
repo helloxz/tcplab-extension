@@ -24,6 +24,8 @@ const params = new URLSearchParams(window.location.search)
 const restricted = params.get('error') === 'restricted'
 const rawUrl = params.get('url') ?? ''
 const rawTitle = params.get('title') ?? ''
+/** 注入脚本实测的页面应用层协议；为空时由 TLS 面板回退到后端探测 */
+const localProtocol = params.get('nhp') ?? ''
 
 type OverlayReason = UnsupportedReason | 'restricted'
 
@@ -107,7 +109,13 @@ const auditLoading = computed(() => {
 
 const audit = computed<AuditResult | null>(() => {
   if (!isSupportedDomain.value || auditLoading.value) return null
-  return computeAudit({ dns: dnsData.value, whois: whoisData.value, tls: tlsData.value })
+  return computeAudit({
+    dns: dnsData.value,
+    whois: whoisData.value,
+    tls: tlsData.value,
+    // 本地协议只代表当前 HTTPS 页面；HTTP 页面仍用后端 443 探测结果
+    httpProtocol: isHttps.value ? localProtocol : '',
+  })
 })
 
 const gradeKeys: Record<AuditGrade, MessageKey> = {
@@ -447,6 +455,7 @@ function openSettings() {
               :is-https="isHttps"
               :is-ip="page.site.isIp"
               :locale="locale"
+              :local-protocol="localProtocol"
               :t="t"
             />
           </UCard>

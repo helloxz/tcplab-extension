@@ -39,7 +39,7 @@ export const zh: Record<MessageKey, string> = {
   'audit.grade.F': '危险',
   'audit.loading': '评级中',
   'audit.unavailable': '无法评级',
-  'audit.basis': '根据证书、HTTPS/TLS、HTTP/2、IPv6、DNSSEC 和域名信息得出的简易评级分数，结果仅供参考。',
+  'audit.basis': '根据证书、HTTPS/TLS、HTTP/2/3、IPv6、DNSSEC 和域名信息得出的简易评级分数，结果仅供参考。',
   'audit.partial': '部分数据缺失。',
   'audit.cap.invalidCert': '证书无效，评级最高为 C。',
 
@@ -112,7 +112,6 @@ export const zh: Record<MessageKey, string> = {
   'tls.forwardSecrecy': '前向保密',
   'tls.cipher': '加密套件',
   'tls.alpn': 'ALPN',
-  'tls.http2': 'HTTP/2',
   'tls.ipAddress': '连接 IP',
   'tls.san': 'SAN（{count}）',
   'tls.certificate': '证书',

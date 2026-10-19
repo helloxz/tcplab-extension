@@ -37,7 +37,7 @@ export const en = {
   'audit.grade.F': 'Dangerous',
   'audit.loading': 'Rating…',
   'audit.unavailable': 'No rating',
-  'audit.basis': 'A simple score based on certificate, HTTPS/TLS, HTTP/2, IPv6, DNSSEC and domain information. For reference only.',
+  'audit.basis': 'A simple score based on certificate, HTTPS/TLS, HTTP/2/3, IPv6, DNSSEC and domain information. For reference only.',
   'audit.partial': 'Some data is missing.',
   'audit.cap.invalidCert': 'An invalid certificate caps the grade at C.',
 
@@ -110,7 +110,6 @@ export const en = {
   'tls.forwardSecrecy': 'Forward secrecy',
   'tls.cipher': 'Cipher',
   'tls.alpn': 'ALPN',
-  'tls.http2': 'HTTP/2',
   'tls.ipAddress': 'Connected IP',
   'tls.san': 'SAN ({count})',
   'tls.certificate': 'Certificate',

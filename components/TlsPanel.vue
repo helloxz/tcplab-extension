@@ -5,6 +5,7 @@ import { checkTls } from '@/lib/api/tls'
 import type { TlsCheckResult, TlsValidationIssue } from '@/lib/api/types'
 import { CACHE_TTL_MS, cacheKey } from '@/lib/cache'
 import { formatDate, formatRetryAfter } from '@/lib/format'
+import { httpProtocolLabel, isHttp2OrH3, parseHttpProtocol } from '@/lib/http-protocol'
 import { tlsVersionGrade } from '@/lib/tls-grade'
 import type { Locale, MessageKey, Translate } from '@/lib/i18n'
 import { translateApiError } from '@/lib/i18n/api-errors'
@@ -15,6 +16,8 @@ const props = defineProps<{
   isHttps: boolean
   isIp: boolean
   locale: Locale
+  /** 浏览器实测的 nextHopProtocol；为空时回退到后端 TLS 探测 */
+  localProtocol?: string
   t: Translate
 }>()
 
@@ -69,6 +72,33 @@ const publicKeyText = computed(() => {
     .filter(Boolean)
     .join(' ')
 })
+
+/**
+ * 本地协议只对 HTTPS 页面有意义：
+ * HTTP 页面本身没有 TLS，仍展示 443 端口探测到的 ALPN / http2。
+ */
+const localProtocolForPage = computed(() => (props.isHttps ? props.localProtocol : ''))
+
+/**
+ * 应用层协议：浏览器实测的 nextHopProtocol 优先；
+ * 读不到时回退到后端 TLS 探测的 ALPN / http2。
+ */
+const effectiveProtocolValue = computed(() => {
+  if (parseHttpProtocol(localProtocolForPage.value) !== 'unknown') {
+    return localProtocolForPage.value
+  }
+  if (parseHttpProtocol(data.value?.connection.alpn) !== 'unknown') {
+    return data.value?.connection.alpn
+  }
+  return data.value?.connection.http2 ? 'h2' : ''
+})
+
+const effectiveProtocol = computed(() => httpProtocolLabel(effectiveProtocolValue.value))
+
+/** 徽标只区分现代 / 传统协议，不表达站点是否支持 */
+const protocolColor = computed<'success' | 'neutral'>(() => (
+  isHttp2OrH3(effectiveProtocolValue.value) ? 'success' : 'neutral'
+))
 
 /** TLS 版本配色：1.3 绿色、1.2 蓝色、1.0/1.1 及 SSL 橙色 */
 const versionColor = computed<'neutral' | 'success' | 'info' | 'warning'>(() => {
@@ -267,18 +297,17 @@ defineExpose({ refresh, data, status })
             </UBadge>
           </dd>
 
-          <dt class="text-dimmed">{{ t('tls.alpn') }}</dt>
-          <dd class="text-highlighted">{{ data.connection.alpn || t('common.none') }}</dd>
-
-          <dt class="self-center text-dimmed">{{ t('tls.http2') }}</dt>
+          <dt class="self-center text-dimmed">{{ t('tls.alpn') }}</dt>
           <dd class="text-highlighted">
             <UBadge
-              :color="data.connection.http2 ? 'success' : 'neutral'"
+              v-if="effectiveProtocol"
+              :color="protocolColor"
               variant="subtle"
               size="sm"
             >
-              {{ data.connection.http2 ? t('common.yes') : t('common.no') }}
+              {{ effectiveProtocol }}
             </UBadge>
+            <span v-else>{{ t('common.none') }}</span>
           </dd>
 
           <dt class="text-dimmed">{{ t('tls.ipAddress') }}</dt>

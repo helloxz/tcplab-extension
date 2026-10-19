@@ -38,9 +38,24 @@ function toggleOverlayInPage(overlayUrl: string) {
 
   const iframe = document.createElement('iframe')
   iframe.id = ID
-  iframe.src = overlayUrl
   iframe.title = 'TCPLab'
   iframe.setAttribute('allow', 'clipboard-write')
+
+  // 页面实际协商出的应用层协议（h3 / h2 / http/1.1）；
+  // 读不到时省略参数，由后端 TLS 探测结果兜底。
+  let src = overlayUrl
+  try {
+    const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined
+    const nextHop = navigation?.nextHopProtocol?.trim()
+    if (nextHop) {
+      const url = new URL(overlayUrl)
+      url.searchParams.set('nhp', nextHop)
+      src = url.toString()
+    }
+  } catch {
+    // 页面可能限制 Performance API，保持后端回退
+  }
+  iframe.src = src
 
   const styles: Record<string, string> = {
     position: 'fixed',

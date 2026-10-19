@@ -1,5 +1,6 @@
 import type { DnsDomainResult, TlsCheckResult, WhoisResult } from '@/lib/api/types'
 import { domainAgeMonths } from './format'
+import { isHttp2OrH3, parseHttpProtocol } from './http-protocol'
 import { tlsVersionGrade } from './tls-grade'
 
 export type AuditGrade = 'S' | 'A' | 'B' | 'C' | 'D' | 'F'
@@ -41,6 +42,8 @@ export interface AuditInput {
   dns: DnsDomainResult | null
   whois: WhoisResult | null
   tls: TlsCheckResult | null
+  /** 浏览器实测的应用层协议；优先于后端探测的 http2 */
+  httpProtocol?: string | null
   now?: Date
 }
 
@@ -108,7 +111,10 @@ export function computeAudit(input: AuditInput): AuditResult | null {
     max: 10,
     missing: false,
   })
-  checks.push({ id: 'http2', earned: tls.connection.http2 ? 10 : 0, max: 10, missing: false })
+  const modernHttp = parseHttpProtocol(input.httpProtocol) === 'unknown'
+    ? tls.connection.http2
+    : isHttp2OrH3(input.httpProtocol)
+  checks.push({ id: 'http2', earned: modernHttp ? 10 : 0, max: 10, missing: false })
 
   // —— DNS：IPv6 ——
   checks.push({
